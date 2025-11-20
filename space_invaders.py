@@ -56,7 +56,6 @@ class Board:
     self.canvas.refresh()
     self.move_enemies()
 
-
   def shoot(self):
     plat = self.state['platform']
     for pium_y in range(plat['y'] - 1, 0, -1):
@@ -75,14 +74,34 @@ class Board:
       )
     )
 
+  def enemies_will_collide(self, new_x, new_y, other_enemies):
+    return any(o.x == new_x and o.y == new_y for o in other_enemies)
+
   def move_enemies(self):
-    new_enemies_position = []
+    future_enemies = []
     for e in self.enemies:
-      e.x = max(1, min(e.x + (1 * e.direction), self.win_w - 2))
-      new_enemies_position.append(e)
+      new_direction = e.direction
+      # randomly update trajectory
       if random.random() < 0.2:
-        e.direction *= -1
-    self.enemies = new_enemies_position
+        new_direction *= -1
+      new_x_position = e.x + (1 * new_direction)
+
+      # bounce if we find a wall
+      if new_x_position <= 1 or new_x_position >= self.win_w - 7:
+        new_direction *= -1
+        new_x_position = e.x + new_direction
+
+      future_enemies.append((e, new_x_position, new_direction))
+
+    for e, np, nd in future_enemies:
+      if sum(1 for _, fx2, _ in future_enemies if fx2 == np) > 1:
+        nd = -nd
+        np = e.x + nd
+
+      e.direction = nd
+      e.x = np
+
+    self.enemies = [e[0] for e in future_enemies]
 
 def pause_game(board):
   board.canvas.addstr(board.win_h // 2, (board.win_w - len('GAME PAUSE, PRESS "R" TO RESUME')) // 2, 'GAME PAUSE, PRESS "R" TO RESUME')
