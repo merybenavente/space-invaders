@@ -120,16 +120,14 @@ def main(stdscr):
 
   key = ''
   while True:
-    key = board.canvas.getch()
-
-    if key == curses.KEY_LEFT:
-      board.state['platform']['x'] -= 1
-    if key == curses.KEY_RIGHT:
-      board.state['platform']['x'] += 1
-
     board.reprint_board()
 
+    key = board.canvas.getch()
     match key:
+      case curses.KEY_LEFT:
+        board.state['platform']['x'] -= 1
+      case curses.KEY_RIGHT:
+        board.state['platform']['x'] += 1
       case curses.KEY_UP:
         board.shoot()
       case _ if key == ord('p'):
