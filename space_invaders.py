@@ -30,6 +30,7 @@ class Board:
     self.canvas.nodelay(True)
     self.canvas.keypad(True)
 
+    self.score = 0
     self.state = {
       "title": {"y": 2, "x": (self.win_w - len(self.TITLE)) // 2, "str": self.TITLE},
       "platform": {
@@ -40,8 +41,10 @@ class Board:
           )
         ),
         "str": self.PLATFORM
-      }
+      },
+      "score": {"y": 2, "x": 2}
     }
+    self.pium = []
     self.enemies: list[Enemy] = []
     [self.create_enemy() for i in range(random.randint(1, 4))]
 
@@ -51,34 +54,62 @@ class Board:
     self.canvas.erase()
 
     for e in self.enemies:
-      sprite = ENEMY_LIFE_MAPPING[e.lifes].value.splitlines()
+      sprite = ENEMY_LIFE_MAPPING[e.lifes].value.strip("\n").split("\n")
+
       for i, line in enumerate(sprite):
-        self.canvas.addstr(e.y + i, e.x, line)
+        y = e.y + i
+        if 0 <= y < self.win_h:
+          limit = self.win_w - e.x - 1
+          if limit <= 0:
+            continue
+          if safe_line := line if limit >= len(line) else line[:limit]:
+            self.canvas.addstr(y, e.x, safe_line)
 
-    for item in self.state.values():
-      self.canvas.addstr(item['y'], item['x'], item['str'])
+    for key, item in self.state.items():
+      if key == 'score':
+        self.canvas.addstr(item['y'], item['x'], f"SCORE {self.score}")
+      else:
+        self.canvas.addstr(item['y'], item['x'], item['str'])
 
+    new_shots = []
+    for shoot in self.pium:
+      self.canvas.addstr(shoot['y'], shoot['x'], shoot['str'])
+      hit_enemy = False
+      for e in self.enemies:
+        if e.lifes <= 0:
+          continue
+        sprite = ENEMY_LIFE_MAPPING[e.lifes].value.strip("\n").split("\n")
+        if shoot['y'] in [e.y + i for i, _ in enumerate(sprite)]:
+          if shoot['x'] in [e.x + i for i in range(7)]:
+            e.lifes -= 1
+            hit_enemy = True
+            self.score += 10
+      if not hit_enemy and shoot['y'] != 0:
+        shoot['y'] -= 1
+        new_shots.append(shoot)
+    self.pium = new_shots
+
+    self.move_enemies()
     self.canvas.box()
     self.canvas.refresh()
-    self.move_enemies()
 
   def shoot(self):
-    plat = self.state['platform']
-    for pium_y in range(plat['y'] - 1, 0, -1):
-      self.canvas.addstr(pium_y, plat['x'] + len(self.PLATFORM) // 2, '*')
-      self.canvas.refresh()
-      time.sleep(0.05)
-      self.canvas.clear()
-      self.reprint_board()
+    self.pium.append({
+        "x": self.state["platform"]['x'] + len(self.PLATFORM) // 2,
+        "y": self.state["platform"]['y'] - 1,
+        "str": '*',
+    })
 
   def create_enemy(self):
+    sprite_w = max(len(l) for l in ENEMY_LIFE_MAPPING[4].value)
     self.enemies.append(
       Enemy(
-        y=random.randint(4, self.win_h-(self.win_h//8)),
-        x=random.randint(4, self.win_w-(self.win_w//10)),
+        y=random.randint(4, self.win_h-(self.win_h//3)),
+        x=random.randint(1, self.win_w - sprite_w - 1),
         lifes=4
       )
     )
+
 
   def move_enemies(self):
     future_enemies = []
@@ -94,7 +125,10 @@ class Board:
         new_direction *= -1
         new_x_position = e.x + new_direction
 
-      future_enemies.append((e, new_x_position, new_direction))
+      if e.lifes > 0:
+        future_enemies.append((e, new_x_position, new_direction))
+      else:
+        self.score += 20
 
     for e, np, nd in future_enemies:
       if sum(1 for _, fx2, _ in future_enemies if fx2 == np) > 1:
@@ -115,6 +149,10 @@ def pause_game(board):
     if char == ord('r'):
       return
 
+def won_game(board):
+  board.canvas.addstr(board.win_h // 2, (board.win_w - len(f'SCORE: {board.score}')) // 2, f'SCORE: {board.score}')
+  board.canvas.refresh()
+  time.sleep(5)
 
 def main(stdscr):
   curses.curs_set(0)
@@ -123,8 +161,11 @@ def main(stdscr):
 
   board = Board(stdscr)
   key = ''
-  while True:
+  while len(board.enemies) > 0:
     board.reprint_board()
+
+    if random.random() < 0.005:
+      board.create_enemy()
 
     key = board.canvas.getch()
     match key:
@@ -142,5 +183,6 @@ def main(stdscr):
         return
 
     time.sleep(0.05)
+  won_game(board)
 
 curses.wrapper(main)
