@@ -20,6 +20,12 @@ class Board:
       start_y, start_x
     )
 
+    if self.win_h <= 20 or self.win_w <= 40:
+      self.canvas.addstr(1, 1, "Window size too small, please relaunch on a larger screen")
+      self.canvas.refresh()
+      time.sleep(5)
+      raise ValueError("Window too small")
+
     self.canvas.keypad(True)
     self.canvas.nodelay(True)
     self.canvas.keypad(True)
@@ -68,8 +74,8 @@ class Board:
   def create_enemy(self):
     self.enemies.append(
       Enemy(
-        y=random.randint(4, self.win_h-20),
-        x=random.randint(4, self.win_w-6),
+        y=random.randint(4, self.win_h-(self.win_h//8)),
+        x=random.randint(4, self.win_w-(self.win_w//10)),
         lifes=4
       )
     )
