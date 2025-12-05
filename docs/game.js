@@ -229,6 +229,8 @@ class Board {
     happyMac.style.top = `${centerY}px`;
 
     this.resetGame();
+    this.reprintBoard();
+    lastUpdateTime = performance.now();
     requestAnimationFrame(gameLoop);
   }
 
