@@ -196,6 +196,20 @@ class Board {
     });
   }
 
+  resetGame() {
+    this.score = 0;
+    this.paused = false;
+    this.gameOver = false;
+    this.frameCount = 0;
+    this.pium = [];
+    this.enemies = [];
+
+    const initialEnemies = Math.floor(Math.random() * 4) + 1;
+    for (let i = 0; i < initialEnemies; i++) {
+      this.createEnemy();
+    }
+  }
+
   resumeGame() {
     const floppyDisk = document.getElementById('floppyDisk');
     const happyMac = document.getElementById('happyMac');
@@ -214,7 +228,7 @@ class Board {
     happyMac.style.left = `${centerX + 180}px`;
     happyMac.style.top = `${centerY}px`;
 
-    this.gameOver = false;
+    this.resetGame();
     requestAnimationFrame(gameLoop);
   }
 
@@ -308,43 +322,46 @@ class Board {
       this.drawText(this.state.score.y, this.state.score.x, `SCORE ${this.score}`);
     }
 
-    this.ctx.fillStyle = '#ff0';
-    if (!this.paused) {
-      const newShots = [];
-      for (const shoot of this.pium) {
-        this.drawText(shoot.y, shoot.x, shoot.str);
+    // Only draw and update bullets if game is not won
+    if (!gameWon) {
+      this.ctx.fillStyle = '#ff0';
+      if (!this.paused) {
+        const newShots = [];
+        for (const shoot of this.pium) {
+          this.drawText(shoot.y, shoot.x, shoot.str);
 
-        let hitEnemy = false;
-        for (const e of this.enemies) {
-          if (e.lifes <= 0) continue;
+          let hitEnemy = false;
+          for (const e of this.enemies) {
+            if (e.lifes <= 0) continue;
 
-          const sprite = e.getSprite();
-          const enemyYPositions = sprite.map((_, i) => e.y + i);
-          const enemyXPositions = Array.from({ length: 7 }, (_, i) => e.x + i);
+            const sprite = e.getSprite();
+            const enemyYPositions = sprite.map((_, i) => e.y + i);
+            const enemyXPositions = Array.from({ length: 7 }, (_, i) => e.x + i);
 
-          if (enemyYPositions.includes(shoot.y) && enemyXPositions.includes(shoot.x)) {
-            e.lifes -= 1;
-            hitEnemy = true;
-            this.score += 10;
-            break;
+            if (enemyYPositions.includes(shoot.y) && enemyXPositions.includes(shoot.x)) {
+              e.lifes -= 1;
+              hitEnemy = true;
+              this.score += 10;
+              break;
+            }
+          }
+
+          if (!hitEnemy && shoot.y !== 0) {
+            shoot.y -= 1;
+            newShots.push(shoot);
           }
         }
+        this.pium = newShots;
 
-        if (!hitEnemy && shoot.y !== 0) {
-          shoot.y -= 1;
-          newShots.push(shoot);
+        this.frameCount++;
+        if (this.frameCount % 3 === 0) {
+          this.moveEnemies();
         }
-      }
-      this.pium = newShots;
-
-      this.frameCount++;
-      if (this.frameCount % 3 === 0) {
-        this.moveEnemies();
-      }
-    } else {
-      // Still draw shots when paused, but don't move them
-      for (const shoot of this.pium) {
-        this.drawText(shoot.y, shoot.x, shoot.str);
+      } else {
+        // Still draw shots when paused, but don't move them
+        for (const shoot of this.pium) {
+          this.drawText(shoot.y, shoot.x, shoot.str);
+        }
       }
     }
 
