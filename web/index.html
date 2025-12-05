@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Invaders</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="game-container">
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas"></canvas>
+      <img id="floppyDisk" class="floppy-disk" src="disk.png" alt="Save disk">
+      <img id="happyMac" class="happy-mac" src="happy-mac.jpg" alt="Happy Mac">
+    </div>
+    <div class="controls">
+      <p><strong>Controls:</strong></p>
+      <p>← → Arrow Keys: Move</p>
+      <p>↑ Arrow Key: Shoot</p>
+      <p>P: Pause | Q: Quit | E: Add Enemy</p>
+    </div>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
