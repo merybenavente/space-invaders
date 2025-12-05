@@ -109,6 +109,7 @@ class Board {
     this.gameOver = true;
     const floppyDisk = document.getElementById('floppyDisk');
     const happyMac = document.getElementById('happyMac');
+    const controls = document.querySelector('.controls');
 
     const canvasRect = this.canvas.getBoundingClientRect();
     const centerX = canvasRect.left + canvasRect.width / 2;
@@ -117,12 +118,13 @@ class Board {
     floppyDisk.style.left = `${centerX}px`;
     floppyDisk.style.top = `${centerY}px`;
 
-    happyMac.style.left = `${centerX + 180}px`;
-    happyMac.style.top = `${centerY}px`;
+    happyMac.style.left = `${centerX}px`;
+    happyMac.style.top = `${centerY + 180}px`;
 
     floppyDisk.classList.add('show');
     happyMac.classList.add('show');
     this.canvas.classList.add('shrinking');
+    controls.classList.add('hidden');
 
     this.setupDragAndDrop();
   }
@@ -213,10 +215,12 @@ class Board {
   resumeGame() {
     const floppyDisk = document.getElementById('floppyDisk');
     const happyMac = document.getElementById('happyMac');
+    const controls = document.querySelector('.controls');
 
     floppyDisk.classList.remove('show');
     happyMac.classList.remove('show');
     this.canvas.classList.remove('shrinking');
+    controls.classList.remove('hidden');
 
     const canvasRect = this.canvas.getBoundingClientRect();
     const centerX = canvasRect.left + canvasRect.width / 2;
@@ -225,8 +229,8 @@ class Board {
     floppyDisk.style.left = `${centerX}px`;
     floppyDisk.style.top = `${centerY}px`;
 
-    happyMac.style.left = `${centerX + 180}px`;
-    happyMac.style.top = `${centerY}px`;
+    happyMac.style.left = `${centerX}px`;
+    happyMac.style.top = `${centerY + 180}px`;
 
     this.resetGame();
     this.reprintBoard();
